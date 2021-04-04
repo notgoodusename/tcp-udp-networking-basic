@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -33,6 +32,8 @@ public class Player : MonoBehaviour
     private int lastFrame;
     private Queue<ClientInputState> clientInputs = new Queue<ClientInputState>();
 
+    LogicTimer logicTimer;
+
     // Set corresponding id and name
     public void Initialize(int _id, string _username)
     {
@@ -45,12 +46,23 @@ public class Player : MonoBehaviour
         lastFrame = 0;
     }
 
+    private void Start()
+    {
+        logicTimer = new LogicTimer(() => FixedTime());
+        logicTimer.Start();
+    }
+    private void Update()
+    {
+        logicTimer.Update();
+    }
+
     public void Destroy()
     {
+        logicTimer.Stop();
         Destroy(gameObject);
     }
 
-    public void FixedUpdate()
+    public void FixedTime()
     {
         if(!Server.isActive)
         {
@@ -97,7 +109,7 @@ public class Player : MonoBehaviour
         }
         
         CalculateVelocity(inputs);
-        controller.Move(velocity * Time.fixedDeltaTime);
+        controller.Move(velocity * logicTimer.FixedDelta);
     }
 
     // Clamps and sets rotation
@@ -164,7 +176,7 @@ public class Player : MonoBehaviour
 
         AirAccelerate(wishdir, wishspeed, airAcceleration.GetValue());
 
-        velocity.y -= gravity.GetValue() * Time.fixedDeltaTime;
+        velocity.y -= gravity.GetValue() * logicTimer.FixedDelta;
     }
 
     void WalkMove(ClientInputState inputs)
@@ -197,7 +209,7 @@ public class Player : MonoBehaviour
 
         Accelerate(wishdir, wishspeed, runAcceleration.GetValue());
 
-        velocity.y = -gravity.GetValue() * Time.fixedDeltaTime;
+        velocity.y = -gravity.GetValue() * logicTimer.FixedDelta;
 
         if ((inputs.buttons & Button.Jump) == Button.Jump)
         {
@@ -215,7 +227,7 @@ public class Player : MonoBehaviour
         addspeed = wishspeed - currentspeed;
         if (addspeed <= 0)
             return;
-        accelspeed = accel * Time.fixedDeltaTime * wishspeed;
+        accelspeed = accel * logicTimer.FixedDelta * wishspeed;
         if (accelspeed > addspeed)
             accelspeed = addspeed;
 
@@ -232,7 +244,7 @@ public class Player : MonoBehaviour
         if (addspeed <= 0)
             return;
 
-        accelspeed = accel * wishspeed * Time.fixedDeltaTime;
+        accelspeed = accel * wishspeed * logicTimer.FixedDelta;
 
         if (accelspeed > addspeed)
             accelspeed = addspeed;
@@ -253,7 +265,7 @@ public class Player : MonoBehaviour
         if (isGrounded)
         {
             control = speed < runAcceleration.GetValue() ? runAcceleration.GetValue() : speed;
-            drop += control * friction.GetValue() * Time.fixedDeltaTime * t;
+            drop += control * friction.GetValue() * logicTimer.FixedDelta * t;
         }
 
         newspeed = speed - drop;

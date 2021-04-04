@@ -35,6 +35,8 @@ public class PlayerInput : MonoBehaviour
 
     private ConsoleUI consoleUI;
 
+    static LogicTimer logicTimer;
+
     private void Awake()
     {
         lastCorrectedFrame = 0;
@@ -48,9 +50,12 @@ public class PlayerInput : MonoBehaviour
     void Start()
     {
         consoleUI = FindObjectOfType<ConsoleUI>();
+
+        logicTimer = new LogicTimer(() => FixedTime());
+        logicTimer.Start();
     }
 
-    private void FixedUpdate()
+    private void FixedTime()
     {
         // Process inputs
         ProcessInput(inputState);
@@ -83,6 +88,8 @@ public class PlayerInput : MonoBehaviour
 
     private void Update()
     {
+        logicTimer.Update();
+
         // Console is open, dont move
         if (consoleUI.isActive())
         {
@@ -124,7 +131,7 @@ public class PlayerInput : MonoBehaviour
         RotationCheck(inputs);
 
         CalculateVelocity(inputs);
-        controller.Move(velocity * Time.fixedDeltaTime);
+        controller.Move(velocity * logicTimer.FixedDelta);
     }
 
     // Normalizes rotation
@@ -177,7 +184,7 @@ public class PlayerInput : MonoBehaviour
 
         AirAccelerate(wishdir, wishspeed, airAcceleration.GetValue());
 
-        velocity.y -= gravity.GetValue() * Time.fixedDeltaTime;
+        velocity.y -= gravity.GetValue() * logicTimer.FixedDelta;
     }
 
     void WalkMove(ClientInputState inputs)
@@ -210,7 +217,7 @@ public class PlayerInput : MonoBehaviour
 
         Accelerate(wishdir, wishspeed, runAcceleration.GetValue());
 
-        velocity.y = -gravity.GetValue() * Time.fixedDeltaTime;
+        velocity.y = -gravity.GetValue() * logicTimer.FixedDelta;
 
         if ((inputs.buttons & Button.Jump) == Button.Jump)
         {
@@ -228,7 +235,7 @@ public class PlayerInput : MonoBehaviour
         addspeed = wishspeed - currentspeed;
         if (addspeed <= 0)
             return;
-        accelspeed = accel * Time.fixedDeltaTime * wishspeed;
+        accelspeed = accel * logicTimer.FixedDelta * wishspeed;
         if (accelspeed > addspeed)
             accelspeed = addspeed;
 
@@ -245,7 +252,7 @@ public class PlayerInput : MonoBehaviour
         if (addspeed <= 0)
             return;
 
-        accelspeed = accel * wishspeed * Time.fixedDeltaTime;
+        accelspeed = accel * wishspeed * logicTimer.FixedDelta;
 
         if (accelspeed > addspeed)
             accelspeed = addspeed;
@@ -266,7 +273,7 @@ public class PlayerInput : MonoBehaviour
         if (isGrounded)
         {
             control = speed < runAcceleration.GetValue() ? runAcceleration.GetValue() : speed;
-            drop += control * friction.GetValue() * Time.fixedDeltaTime * t;
+            drop += control * friction.GetValue() * logicTimer.FixedDelta * t;
         }
 
         newspeed = speed - drop;
@@ -283,6 +290,11 @@ public class PlayerInput : MonoBehaviour
     private void SendInputToServer()
     {
         ClientSend.PlayerInput(inputState);
+    }
+
+    private void OnApplicationQuit()
+    {
+        logicTimer.Stop();
     }
 
     private void setPlayerToSimulationState(SimulationState state)

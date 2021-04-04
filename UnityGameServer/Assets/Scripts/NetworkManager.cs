@@ -8,6 +8,8 @@ public class NetworkManager : MonoBehaviour
 
     public GameObject playerPrefab;
 
+    static LogicTimer logicTimer;
+
     private void Awake()
     {
         if (instance == null)
@@ -23,16 +25,23 @@ public class NetworkManager : MonoBehaviour
 
     private void Start()
     {
+        logicTimer = new LogicTimer(() => FixedTime());
+        logicTimer.Start();
+
+        Application.targetFrameRate = Server.tickrate.GetIntValue();
         QualitySettings.vSyncCount = 0;
 
         Server.Start(50, 26950);
     }
 
-    private void FixedUpdate()
+    void Update()
+    {
+        logicTimer.Update();
+    }
+
+    private void FixedTime()
     {
         Application.targetFrameRate = Server.tickrate.GetIntValue();
-        Time.fixedDeltaTime = Utils.TickInterval();
-
         if (!Server.isActive)
         {
             tick = 0;
@@ -59,6 +68,7 @@ public class NetworkManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         Server.Stop();
+        logicTimer.Stop();
     }
 
     public Player InstantiatePlayer()

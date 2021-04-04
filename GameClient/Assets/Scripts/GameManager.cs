@@ -23,13 +23,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        // Set correspoding tickrate
-        Time.fixedDeltaTime = Utils.TickInterval();
-        Time.maximumDeltaTime = Utils.TickInterval();
-    }
-
     /// <summary>Spawns a player.</summary>
     /// <param name="_id">The player's ID.</param>
     /// <param name="_name">The player's name.</param>

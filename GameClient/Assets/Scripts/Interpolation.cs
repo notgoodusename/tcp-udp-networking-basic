@@ -140,14 +140,14 @@ public class Interpolation : MonoBehaviour
         {
             if (isLocalPlayer)
             {
-                timeElapsed = (timeElapsed * Time.fixedDeltaTime + Time.deltaTime) / Time.fixedDeltaTime;
+                timeElapsed = (timeElapsed * Utils.TickInterval() + Time.deltaTime) / Utils.TickInterval();
 
                 Interpolate(timeElapsed);
 
                 // While we have reached the target, move to the next and repeat
                 while (ReachedTarget(timeElapsed))
                 {
-                    timeElapsed = (timeElapsed * Time.fixedDeltaTime - Time.fixedDeltaTime) / Time.fixedDeltaTime;
+                    timeElapsed = (timeElapsed * Utils.TickInterval() - Utils.TickInterval()) / Utils.TickInterval();
                     timeElapsed = Mathf.Max(0f, timeElapsed);
 
                     if (futureTransformUpdates.Count <= 0)

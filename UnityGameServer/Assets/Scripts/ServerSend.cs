@@ -109,6 +109,9 @@
     /// <param name="_player">The player whose position to update.</param>
     public static void PlayerPosition(Player _player)
     {
+        if (!_player)
+            return;
+
         using (Packet _packet = new Packet((int)ServerPackets.playerPosition))
         {
             _packet.Write(_player.id);
@@ -123,6 +126,9 @@
     /// <param name="_player">The player whose rotation to update.</param>
     public static void PlayerRotation(Player _player)
     {
+        if (!_player)
+            return;
+
         using (Packet _packet = new Packet((int)ServerPackets.playerRotation))
         {
             _packet.Write(_player.id);
@@ -137,6 +143,9 @@
     /// <param name="_player">The player whose position and rotation to update.</param>
     public static void PlayerTransform(Player _player)
     {
+        if (!_player)
+            return;
+
         using (Packet _packet = new Packet((int)ServerPackets.playerTransform))
         {
             _packet.Write(_player.id);

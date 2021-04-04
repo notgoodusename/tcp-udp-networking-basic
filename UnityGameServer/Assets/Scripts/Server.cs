@@ -36,9 +36,6 @@ public class Server
     /// <param name="_port">The port to start the server on.</param>
     public static void Start(int _maxPlayers, int _port)
     {
-        Application.targetFrameRate = tickrate.GetIntValue();
-        Time.fixedDeltaTime = Utils.TickInterval();
-        Time.maximumDeltaTime = Utils.TickInterval();
         Stop();
 
         MaxPlayers = _maxPlayers;

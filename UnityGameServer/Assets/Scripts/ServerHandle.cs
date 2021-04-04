@@ -37,11 +37,11 @@ public class ServerHandle
 
     public static void PlayerConvar(int _fromClient, Packet _packet)
     {
-        if (!Server.clients[_fromClient].player)
-            return;
-
         string name = _packet.ReadString();
         float requestedValue = _packet.ReadFloat();
+
+        if (!Server.clients[_fromClient].player)
+            return;
 
         //Check if admin
 
