@@ -38,6 +38,9 @@ public class ClientHandle : MonoBehaviour
 
         if (GameManager.players.TryGetValue(_id, out PlayerManager _player))
         {
+            if (_serverTick > GlobalVariables.serverTick)
+                GlobalVariables.serverTick = _serverTick;
+
             _player.interpolation.NewUpdate(_serverTick, _position);
         }
     }
@@ -50,6 +53,9 @@ public class ClientHandle : MonoBehaviour
 
         if (GameManager.players.TryGetValue(_id, out PlayerManager _player))
         {
+            if (_serverTick > GlobalVariables.serverTick)
+                GlobalVariables.serverTick = _serverTick;
+
             _player.interpolation.NewUpdate(_serverTick, _rotation);
         }
     }
@@ -63,6 +69,9 @@ public class ClientHandle : MonoBehaviour
 
         if (GameManager.players.TryGetValue(_id, out PlayerManager _player))
         {
+            if (_serverTick > GlobalVariables.serverTick)
+                GlobalVariables.serverTick = _serverTick;
+
             _player.interpolation.NewUpdate(_serverTick, _position, _rotation);
         }
     }
@@ -111,6 +120,7 @@ public class ClientHandle : MonoBehaviour
     public static void ServerTick(Packet _packet)
     {
         int _serverTick = _packet.ReadInt();
-        GlobalVariables.serverTick = _serverTick;
+        if(_serverTick > GlobalVariables.serverTick)
+            GlobalVariables.serverTick = _serverTick;
     }
 }
