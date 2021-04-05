@@ -55,12 +55,6 @@ public class Interpolation : MonoBehaviour
 
     private void Update()
     {
-        if (futureTransformUpdates == null)
-        {
-            futureTransformUpdates = new List<TransformUpdate>();
-            return;
-        }
-
         if (Sync)
         {
             // There is no updates to lerp from, return
@@ -269,25 +263,23 @@ public class Interpolation : MonoBehaviour
 
     internal void NewUpdate(int _tick, Vector3 _position, Quaternion _rotation)
     {
-        if (futureTransformUpdates == null)
+        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _position, lastPosition, _rotation, lastRotation));
+
+        if (futureTransformUpdates.Count <= 1)
         {
-            futureTransformUpdates = new List<TransformUpdate>();
-            futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, Time.time, _position, _position, _rotation, _rotation));
-            
             lastPosition = _position;
             lastRotation = _rotation;
             lastTime = Time.time;
             return;
         }
 
-        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _position, lastPosition, _rotation, lastRotation));
         futureTransformUpdates.Sort(delegate (TransformUpdate x, TransformUpdate y) {
             return x.tick.CompareTo(y.tick);
         });
 
         // Purpose: after sorting the updates, we set the last positions/rotations
         // This accounts for packets being out of order
-        
+
         TransformUpdate last = TransformUpdate.zero;
         foreach (TransformUpdate transformUpdate in futureTransformUpdates)
         {
@@ -316,16 +308,14 @@ public class Interpolation : MonoBehaviour
     }
     internal void NewUpdate(int _tick, Vector3 _position)
     {
-        if (futureTransformUpdates == null)
+        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _position, lastPosition));
+
+        if (futureTransformUpdates.Count <= 1)
         {
-            futureTransformUpdates = new List<TransformUpdate>();
-            futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, Time.time, _position, _position));
             lastPosition = _position;
             lastTime = Time.time;
             return;
         }
-
-        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _position, lastPosition));
 
         futureTransformUpdates.Sort(delegate (TransformUpdate x, TransformUpdate y) {
             return x.tick.CompareTo(y.tick);
@@ -361,16 +351,14 @@ public class Interpolation : MonoBehaviour
     }
     internal void NewUpdate(int _tick, Quaternion _rotation)
     {
-        if (futureTransformUpdates == null)
+        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _rotation, lastRotation));
+
+        if (futureTransformUpdates.Count <= 1)
         {
-            futureTransformUpdates = new List<TransformUpdate>();
-            futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, Time.time, _rotation, _rotation));
             lastRotation = _rotation;
             lastTime = Time.time;
             return;
         }
-
-        futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _rotation, lastRotation));
 
         futureTransformUpdates.Sort(delegate (TransformUpdate x, TransformUpdate y) {
             return x.tick.CompareTo(y.tick);
@@ -410,15 +398,6 @@ public class Interpolation : MonoBehaviour
     // the reason it is a separete function is to skip some unecessary calls
     internal void PlayerUpdate(int _tick, Vector3 _position)
     {
-        if (futureTransformUpdates == null)
-        {
-            futureTransformUpdates = new List<TransformUpdate>();
-            futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, Time.time, _position, _position));
-            lastPosition = _position;
-            lastTime = Time.time;
-            return;
-        }
-
         futureTransformUpdates.Add(new TransformUpdate(_tick, Time.time, lastTime, _position, lastPosition));
 
         lastPosition = _position;
