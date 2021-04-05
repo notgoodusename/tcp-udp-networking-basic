@@ -14,6 +14,9 @@ public class Interpolation : MonoBehaviour
     private Quaternion lastRotation;
     private float lastTime;
 
+    private int lastTick;
+    private float lastLerpAmount;
+
     private TransformUpdate current;
 
 
@@ -43,6 +46,9 @@ public class Interpolation : MonoBehaviour
         lastPosition = transform.position;
         lastRotation = transform.rotation;
         lastTime = Time.time;
+
+        lastTick = 0;
+        lastLerpAmount = 0f;
 
         current = new TransformUpdate(currentTick, Time.time, Time.time, transform.position, transform.position, transform.rotation, transform.rotation);
     }
@@ -187,7 +193,13 @@ public class Interpolation : MonoBehaviour
         }
         else
         {
+            // Lerp amount moved to the next loop but the current target didnt move to the next tick, so dont interpolate
+            if (lastTick == current.tick && GlobalVariables.lerpAmount < lastLerpAmount)
+                return;
+
             Interpolate(GlobalVariables.lerpAmount);
+            lastTick = current.tick;
+            lastLerpAmount = GlobalVariables.lerpAmount;
         }
     }
 
