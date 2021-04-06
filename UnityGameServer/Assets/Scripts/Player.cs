@@ -6,13 +6,12 @@ public class Player : MonoBehaviour
     static Convar moveSpeed = new Convar("sv_movespeed", 6.35f, "Movement speed for the player", Flags.NETWORK);
     static Convar runAcceleration = new Convar("sv_accelerate", 14f, "Acceleration for the player when moving", Flags.NETWORK);
     static Convar airAcceleration = new Convar("sv_airaccelerate", 12f, "Air acceleration for the player", Flags.NETWORK);
-    static Convar jumpForce = new Convar("sv_jumpforce", 4f, "Jump force for the player", Flags.NETWORK);
+    static Convar jumpForce = new Convar("sv_jumpforce", 1f, "Jump force for the player", Flags.NETWORK);
     static Convar friction = new Convar("sv_friction", 5.5f, "Player friction", Flags.NETWORK);
-    static Convar gravity = new Convar("sv_gravity", 9.81f, "Player gravity", Flags.NETWORK);
     static Convar rotationBounds = new Convar("sv_maxrotation", 89f, "Maximum rotation around the x axis", Flags.NETWORK);
 
     public GameObject head;
-    public CharacterController controller;
+    public Rigidbody rb;
 
     public LayerMask whatIsGround;
     public GameObject groundCheck;
@@ -43,6 +42,8 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
+        rb.freezeRotation = true;
+        rb.isKinematic = true;
         lastFrame = 0;
     }
 
@@ -107,9 +108,15 @@ public class Player : MonoBehaviour
         {
             LagCompensation.Backtrack(id, inputs.tick, inputs.lerpAmount);
         }
-        
+
+        rb.isKinematic = false;
+        rb.velocity = velocity;
+
         CalculateVelocity(inputs);
-        controller.Move(velocity * logicTimer.FixedDelta);
+        Physics.Simulate(logicTimer.FixedDelta);
+
+        velocity = rb.velocity;
+        rb.isKinematic = true;
     }
 
     // Clamps and sets rotation
@@ -153,7 +160,7 @@ public class Player : MonoBehaviour
         if (isGrounded && 
             Physics.SphereCast(transform.position, checkRadius, Vector3.down, out RaycastHit hit, 100f, whatIsGround))
         {
-            isGrounded = Vector3.Angle(Vector3.up, hit.normal) <= controller.slopeLimit;
+            isGrounded = Vector3.Angle(Vector3.up, hit.normal) <= 45f;
         }
     }
 
@@ -175,8 +182,6 @@ public class Player : MonoBehaviour
         float wishspeed = wishdir.magnitude;
 
         AirAccelerate(wishdir, wishspeed, airAcceleration.GetValue());
-
-        velocity.y -= gravity.GetValue() * logicTimer.FixedDelta;
     }
 
     void WalkMove(ClientInputState inputs)
@@ -184,7 +189,7 @@ public class Player : MonoBehaviour
         if ((inputs.buttons & Button.Jump) == Button.Jump)
         {
             Friction(0f);
-            velocity.y = jumpForce.GetValue();
+            rb.velocity += new Vector3(0f, jumpForce.GetValue(), 0f);
             AirMove(inputs);
             return;
         }
@@ -209,11 +214,9 @@ public class Player : MonoBehaviour
 
         Accelerate(wishdir, wishspeed, runAcceleration.GetValue());
 
-        velocity.y = -gravity.GetValue() * logicTimer.FixedDelta;
-
         if ((inputs.buttons & Button.Jump) == Button.Jump)
         {
-            velocity.y = jumpForce.GetValue();
+            rb.velocity += new Vector3(0f, jumpForce.GetValue(), 0f);
         }
     }
 
@@ -223,7 +226,7 @@ public class Player : MonoBehaviour
         float accelspeed;
         float currentspeed;
 
-        currentspeed = Vector3.Dot(velocity, wishdir);
+        currentspeed = Vector3.Dot(rb.velocity, wishdir);
         addspeed = wishspeed - currentspeed;
         if (addspeed <= 0)
             return;
@@ -231,15 +234,14 @@ public class Player : MonoBehaviour
         if (accelspeed > addspeed)
             accelspeed = addspeed;
 
-        velocity.x += accelspeed * wishdir.x;
-        velocity.z += accelspeed * wishdir.z;
+        rb.velocity += new Vector3(accelspeed * wishdir.x, 0f, accelspeed * wishdir.z);
     }
 
     void AirAccelerate(Vector3 wishdir, float wishspeed, float accel)
     {
         float addspeed, accelspeed, currentspeed;
 
-        currentspeed = Vector3.Dot(velocity, wishdir);
+        currentspeed = Vector3.Dot(rb.velocity, wishdir);
         addspeed = wishspeed - currentspeed;
         if (addspeed <= 0)
             return;
@@ -249,13 +251,12 @@ public class Player : MonoBehaviour
         if (accelspeed > addspeed)
             accelspeed = addspeed;
 
-        velocity.x += accelspeed * wishdir.x;
-        velocity.z += accelspeed * wishdir.z;
+        rb.velocity += new Vector3(accelspeed * wishdir.x, 0f, accelspeed * wishdir.z);
     }
 
     void Friction(float t)
     {
-        float speed = velocity.magnitude, newspeed, control, drop;
+        float speed = rb.velocity.magnitude, newspeed, control, drop;
 
         if (speed < 0.1f)
             return;
@@ -274,8 +275,7 @@ public class Player : MonoBehaviour
 
         newspeed /= speed;
 
-        velocity.x *= newspeed;
-        velocity.z *= newspeed;
+        rb.velocity = new Vector3(rb.velocity.x * newspeed, rb.velocity.y, rb.velocity.z * newspeed);
     }
     #endregion
 
