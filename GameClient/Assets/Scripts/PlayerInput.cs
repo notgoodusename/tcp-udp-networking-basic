@@ -90,8 +90,6 @@ public class PlayerInput : MonoBehaviour
 
     private void Update()
     {
-        logicTimer.Update();
-
         // Console is open, dont move
         if (consoleUI.isActive())
         {
@@ -105,6 +103,7 @@ public class PlayerInput : MonoBehaviour
                 VerticalAxis = 0f,
                 rotation = playerCamera.transform.rotation,
             };
+            logicTimer.Update();
             return;
         }
 
@@ -126,6 +125,7 @@ public class PlayerInput : MonoBehaviour
             VerticalAxis = Input.GetAxisRaw("Vertical"),
             rotation = playerCamera.transform.rotation,
         };
+        logicTimer.Update();
     }
     
     private void ProcessInput(ClientInputState inputs)
